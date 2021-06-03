@@ -62,9 +62,13 @@ https://github.com/robertsonics/WAV-Trigger-Arduino-Serial-Library
 ## Sound
 
 length : 100ms
+
 r/f : 5ms
+
 Standard : 1000Hz
+
 Target : 2000Hz
+
 
 ------------------------------
 ## Device Paradigm
