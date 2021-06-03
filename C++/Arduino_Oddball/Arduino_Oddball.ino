@@ -152,7 +152,7 @@ if (input == 49){
        a = ran[n]; 
        cnt = 1;
 
-         // Standard sound
+       //===== Standard sound =====//
           if (a == 0) { 
  
             while(true) {          // To wait Analog sound detection
@@ -163,7 +163,7 @@ if (input == 49){
                 wTrig.trackPlaySolo(2);
             
               // WAT Trigger onset signal_1
-                digitalWrite(13, HIGH);   
+                digitalWrite(11, HIGH);   
                 cnt = 0; 
               }
               
@@ -181,21 +181,22 @@ if (input == 49){
                 digitalWrite(13, LOW);
 
                 delay(700);
-                break;
+                
+                break;    // Towards the next array number
 
                 }    
             }
-            wTrig.stopAllTracks(); 
+            
+           wTrig.stopAllTracks(); 
             
           }
-          // Target
+          
+        //===== Target sound =====//
           else if (a == 1){  
 
-            int sound = analogRead(A0);
-            while (true){
+            while (true){       // To wait Analog sound detection
 
-            // To 
-              if (cnt == 1){
+              if (cnt == 1){    // To avoid sound repeat
                 
             // WAV Trigger onset
               wTrig.trackPlaySolo(3);
@@ -216,38 +217,38 @@ if (input == 49){
                 
                // Trigger offset
                 digitalWrite(12, LOW);
-                digitalWrite(13, LOW);
+                digitalWrite(11, LOW);
 
                 delay(700);
-                break;
+                
+                break;    // Towards the next array number
                 }    
       
               wTrig.stopAllTracks(); 
-                }
+            }
           }
           
-        }                    
+       } // End a block                   
   }
+
   
 ////// Paractice sound //////
 
-  //// Standard sound
+//===== Standard sound =====//
 else if (input == 50){  
       
       wTrig.trackPlaySolo(2);
       
     }
-
     
-//// Target sound 
+//===== Target sound =====//
 else if (input == 51){
 
     wTrig.trackPlaySolo(3);
 
   }
 
- 
-//// Practice 
+//===== Practice =====//
 else if (input == 52){  
 
   for(int s = 0; s < 10; s++){
