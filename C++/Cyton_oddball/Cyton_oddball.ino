@@ -7,7 +7,8 @@
 boolean addAccelToSD = false; // On writeDataToSDcard() call adds Accel data to SD card write
 boolean addAuxToSD = false; // On writeDataToSDCard() call adds Aux data to SD card write
 boolean SDfileOpen = false;
-int stand;
+int standard;
+int sound_on
 int target;
 
 void setup() {
@@ -25,28 +26,15 @@ void loop() {
       // Read from the ADS(s), store data, set channelDataAvailable flag to false
       board.updateChannelData();
 
-      board.auxData[0] = 0;
-      board.auxData[1] = 0;
-      board.auxData[2] = 0;
-             
-      stand = digitalRead(17);
-      target = digitalRead(12);
-        
-      // Read standard stimuli
-      if (stand == HIGH) {
+      // Read Trigger  
+      standard = digitalRead(11);    // Standard Trigger  
+      sound_on = digitalRead(12);    // Real sound onset Trigger
+      target = digitalRead(13);      // Target Trigger 
 
-        board.auxData[0] = 0x6220; // D11
-        board.auxData[1] = 0;      // D12
-        board.auxData[2] = 0;      // D17                              
-       }     
-
-      // Read target stimuli
-      if (target == HIGH) {
-
-        board.auxData[0] = 0;
-        board.auxData[1] = 0x6220;
-        board.auxData[2] = 0;        
-      }
+      // Write trigger in cyton board
+      board.auxData[0] = standard;    // D11
+      board.auxData[1] = sound_on;    // D12
+      board.auxData[2] = target;      // D13
  
    // Send packet with channel data and auxData contents
       board.sendChannelData();   
