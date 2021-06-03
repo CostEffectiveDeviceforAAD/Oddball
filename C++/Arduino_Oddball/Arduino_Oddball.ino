@@ -6,18 +6,19 @@
 
 wavTrigger wTrig;             // Our WAV Trigger object
 
-Metro gLedMetro();         // LED blink interval timer
-Metro gSeqMetro();        // Sequencer state machine interval timer
+Metro gLedMetro(500);         // LED blink interval timer
+Metro gSeqMetro(6000);        // Sequencer state machine interval timer
 
 
 void setup() {
 
   Serial.begin(9600);
-  randomSeed(analogRead(0));
 
-  pinMode(9, OUTPUT);  // WAV Trigger Write signal
-  pinMode(13, OUTPUT); // Cyton Write signal
-  pinMode(12, OUTPUT);  
+  pinMode(9, OUTPUT);   // Write signal to WAV Trigger
+  pinMode(11, OUTPUT);  // Trigger for Standard sound
+  pinMode(12, OUTPUT);  // Trigger for real sound on set  
+  pinMode(13, OUTPUT);  // Trigger for Target sound
+  
 
   // If the Arduino is powering the WAV Trigger, we should wait for the WAV
   //  Trigger to finish reset before trying to send commands.
@@ -37,109 +38,81 @@ void setup() {
   
 }
 
-int b = 11;
-int a = 1;
-int s;
-int i;
-
-int trial = 365;  // total trial - 10
-int ran[365];
-int arr[365];
+int a;
+int r;
 int cnt = 1;
-int temp;
-int ch;
 int c = 1;
 int block = 1;
 int target;
 
-
-///////////////////
 void loop() {
   
-digitalWrite(3, HIGH);
+int trial = 375;
+int ran[trial];
 
+// To reset random int 
+randomSeed(analogRead(1));
 
 ///// Change ratio of target sound per block 
 if (block == 1){
-  target = round((trial+10)*0.25);
+  target = round((trial)*0.25);
   
 }
 else if (block == 2){
-  target = round((trial+10)*0.15);
+  target = round((trial)*0.15);
   
 }
 else if (block == 3){
-  target = round((trial+10)*0.20);
+  target = round((trial)*0.20);
 }
 
-//Serial.println(target);
-//Serial.println(block);
 
 //////////// Random Seed ////////////////
 
-// To avoid repetition
+// To avoid Repetition
 if (cnt == 1){
 
-  // Seed first random int
-  ran[0] = random(1, trial+1);
-
-
-  // Run as the number of trial corresponding to the current block
-  for (i = 1; i < trial; ){  
+  // Make zeros array
+  for (int i = 0; i < trial; i++){
     
-    temp = random(1,trial+1);
-
-     
-     for (cnt = 0; cnt < i; cnt++){
-
-      // if current random int is duplicated, return to pre-steop
-      if (ran[cnt] == temp ){            
-        break;
-      }
-      
-      // 
-      else if (ran[cnt] != temp && cnt == i-1){
-         
-        ran[i] = temp;
-        
-        if ( temp > target){
-          arr[i] = 0;
-        }
-        else{
-          arr[i] = 1;
-        }
-
-        if (i < trial-10){
-
-          if (arr[cnt] == 1 && arr[i] == 1){
-            break;
-        }
-        }
-            
-        i++;
-      }  
-    }  
+      ran[i] = 0;
   }
+
+  // Seed number 1(meaning target) per the number of target 
+  for (int i = 0; i < target;){
+    
+    r = random(11,trial+1);   // 1~10 must be 0 (meaning standard)
+
+    // To avoid continuous playback of target sounds.
+    if (ran[r-2] != 1 && ran[r-1] != 1 && ran[r] != 1 && ran[r+1] != 1){
+  
+      ran[r] = 1;
+      i++;     
+    } 
+  
   cnt = 0;
 }
+}
 
-
-/////////////////////////////////////
+////////////////////////////////////////////////////////
+////////////////// START STREAMING /////////////////////
+////////////////////////////////////////////////////////
 
 int input = Serial.read();
 int sound = 0;
 
  ////// Main experiment start //////
 if (input == 49){
-cnt = 1;    
-block = block+1;     
+  
+  cnt = 1;    
+  block = block+1;     
 
     /// play Standard 10 times
     for (int s = 0; s < 10;){
 
-    
       //// Sound onset (from arduino) ////
       
+      // To play a sound only one   
       if (cnt == 1){
         
         // WAV Trigger onset
@@ -155,13 +128,16 @@ block = block+1;
       
       //// Sound onset detect ////
       if (sound > 12){
-    
+
+        // Send Trigger to Cyton during 100ms
         digitalWrite(12, HIGH);
         delay(100);
         digitalWrite(12, LOW);
         digitalWrite(13, LOW);
+        
         s++;
         cnt = 1;
+        
         delay(700);
       }    
 
@@ -172,8 +148,8 @@ block = block+1;
     // Start Random play
     for (int n = 0; n < trial; n++) {      
     
-        // Random int
-       a = arr[n]; 
+       // Detect whether standard or target
+       a = ran[n]; 
        cnt = 1;
 
          // Standard sound
@@ -257,48 +233,34 @@ block = block+1;
 
   //// Standard sound
 else if (input == 50){  
-
-    //for (s = 0; s < 3; s++){
       
       wTrig.trackPlaySolo(2);
-      digitalWrite(13, HIGH);
-      //delay(100);
-      digitalWrite(13, LOW);        
-     // }
+      
     }
 
     
 //// Target sound 
 else if (input == 51){
 
-  //for (s = 0; s <3; s++){
-
     wTrig.trackPlaySolo(3);
-    digitalWrite(13, HIGH);
-    //delay(800);
-    digitalWrite(13, LOW);  
-    //}
+
   }
 
-  
+ 
 //// Practice 
 else if (input == 52){  
 
-  for(s = 0; s < 10; s++){
+  for(int s = 0; s < 10; s++){
 
      if (s == 4 || s == 7){
       
         wTrig.trackPlaySolo(3);
-        digitalWrite(12, HIGH);
-        digitalWrite(12, LOW);
         delay(800);
         wTrig.stopAllTracks();
      }
      else{
 
         wTrig.trackPlaySolo(2);
-        digitalWrite(13, HIGH);
-        digitalWrite(12, LOW);
         delay(800);  
         wTrig.stopAllTracks();   
       }
