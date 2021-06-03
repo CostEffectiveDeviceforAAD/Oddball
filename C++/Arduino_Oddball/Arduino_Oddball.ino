@@ -38,22 +38,27 @@ void setup() {
   
 }
 
+
 int a;
 int r;
 int cnt = 1;
-int c = 1;
 int block = 1;
 int target;
 
+
 void loop() {
-  
+
+
+// Set the trial number
 int trial = 375;
 int ran[trial];
 
 // To reset random int 
 randomSeed(analogRead(1));
 
-///// Change ratio of target sound per block 
+
+//////// Change ratio of target sound per block ///////////
+
 if (block == 1){
   target = round((trial)*0.25);
   
@@ -67,7 +72,7 @@ else if (block == 3){
 }
 
 
-//////////// Random Seed ////////////////
+/////////////// Random Seed ///////////////////
 
 // To avoid Repetition
 if (cnt == 1){
@@ -89,9 +94,9 @@ if (cnt == 1){
       ran[r] = 1;
       i++;     
     } 
+  }
   
   cnt = 0;
-}
 }
 
 ////////////////////////////////////////////////////////
@@ -101,58 +106,22 @@ if (cnt == 1){
 int input = Serial.read();
 int sound = 0;
 
- ////// Main experiment start //////
+
+////// Main experiment start //////
+ 
 if (input == 49){
   
   cnt = 1;    
   block = block+1;     
 
-    /// play Standard 10 times
-    for (int s = 0; s < 10;){
-
-      //// Sound onset (from arduino) ////
-      
-      // To play a sound only one   
-      if (cnt == 1){
-        
-        // WAV Trigger onset
-        wTrig.trackPlaySolo(2);
-    
-        // WAT Trigger signal
-        digitalWrite(13, HIGH);   
-        cnt = 0; 
-      }
-          
-      //// Sound read ////
-      int sound = analogRead(A0);
-      
-      //// Sound onset detect ////
-      if (sound > 12){
-
-        // Send Trigger to Cyton during 100ms
-        digitalWrite(12, HIGH);
-        delay(100);
-        digitalWrite(12, LOW);
-        digitalWrite(13, LOW);
-        
-        s++;
-        cnt = 1;
-        
-        delay(700);
-      }    
-
-      wTrig.stopAllTracks(); 
-          
-    }
-
-    // Start Random play
+  ////// Start Random play //////
+  
     for (int n = 0; n < trial; n++) {      
     
        // Detect whether standard or target
        a = ran[n]; 
-       cnt = 1;
 
-       //===== Standard sound =====//
+         //===== Standard sound =====//
           if (a == 0) { 
  
             while(true) {          // To wait Analog sound detection
@@ -162,7 +131,7 @@ if (input == 49){
               //// WAV Trigger onset ////
                 wTrig.trackPlaySolo(2);
             
-              // WAT Trigger onset signal_1
+              // Send the standard trigger to cyton
                 digitalWrite(11, HIGH);   
                 cnt = 0; 
               }
@@ -191,7 +160,7 @@ if (input == 49){
             
           }
           
-        //===== Target sound =====//
+         //===== Target sound =====//
           else if (a == 1){  
 
             while (true){       // To wait Analog sound detection
@@ -201,7 +170,7 @@ if (input == 49){
             // WAV Trigger onset
               wTrig.trackPlaySolo(3);
           
-            // WAT Trigger onset signal_1
+            // Send the target trigger to cyton
               digitalWrite(13, HIGH);   
               cnt = 0; 
               }
