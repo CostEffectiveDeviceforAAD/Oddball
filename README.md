@@ -73,14 +73,14 @@ Target : 2000Hz
 ------------------------------
 ## Device Paradigm
 
-1. Start streaming using python (LSL) > EEG acquisition start.
-2. Start Experiment using psychopy.
-3. Send signal for sound onset to Arduino through Serial Port.
-4. play sound from WAV Trigger through arduino ( generate jitter ) and send Triggers for standard or target. [ 1. line ]
-5. Flow Sound through earphon to subject and analog signal of sound to arduino. [ 2. line ]
-6. Detect sound onset timing in arduino by analog signal of sound. [ 3. line ]
-7. Send tigger about sound onset to Cyton + daisy ( No jitter ). [ 4. line ]
-8. Send EEG data and Trigger to desktop, be received and recorded by python.
+1. Start streaming with Python (LSL) > EEG acquisition start.
+2. Start Experiment with Psychopy.
+3. Sends the signal of sound onset to Arduino via the Serial Port.
+4. Play sound from WAV Trigger via Arduino ( generated jitter ) and send Triggers on standard or target. [ 1. line ]
+5. Sound flows through earphone to subject and analog signals of sound are sent to Arduino at the same time. [ 2. line ]
+6. Detect sound onset timing in Arduino by analog signals of sound. [ 3. line ]
+7. Sends the tigger for the sound onset to Cyton + daisy ( No jitter ). [ 4. line ]
+8. Sends EEG data and Trigger to the desktop, received and recorded them by python.
 
 
 
