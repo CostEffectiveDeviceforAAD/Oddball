@@ -10,6 +10,7 @@ boolean SDfileOpen = false;
 int stand;
 int target;
 
+////
 void setup() {
   // Bring up the OpenBCI Board
   board.begin();
