@@ -1,4 +1,4 @@
-# Auditory BCI for real-time AAD
+# Auditory BCI for Oddball Task
 
 This is Auditory BCI for Oddball Task.
 
