@@ -10,7 +10,7 @@ eeg_data = load('EEG_0526.mat'); % EEG trace
 trg_data = load('A_0526.mat'); % trigger trace
 
 % Select block data
-block = 3;   % block
+block = 1;   % block
 
 % Import
 raw = squeeze(eeg_data.EEG(block,:,:));   % times by channel
