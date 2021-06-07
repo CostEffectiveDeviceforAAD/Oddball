@@ -63,7 +63,7 @@ https://github.com/robertsonics/WAV-Trigger-Arduino-Serial-Library
 
 length : 100ms
 
-r/f : 5ms
+r/f : 10ms
 
 Standard : 1000Hz
 
