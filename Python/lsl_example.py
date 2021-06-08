@@ -21,7 +21,7 @@ def lsl_streamers(sample):
     outlet_eeg.push_sample(np.array(sample.channels_data)*SCALE_FACTOR_EEG)
     outlet_aux.push_sample(np.array(sample.aux_data)*SCALE_FACTOR_AUX)
 
-board = OpenBCICyton(port='COM15', daisy='true')
+board = OpenBCICyton(port='COM3', daisy='true')
 
 board.write_command('/3')    # Set Analog Mode /2= analog , /3 = digital
 
