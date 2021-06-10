@@ -68,6 +68,7 @@ eeglab
 % after components removal
 
 eeg_ica = EEG.data';
+save('1_ica.mat', 'eeg_ica');
 
 %% pre
 %  per channel
@@ -78,12 +79,12 @@ end
 
 % Common Average Reference
 for t = 1:ti
-    m = mean(eeg_ch(t,:));
+    m = mean(eeg_ch(t,[5 9]));
     eeg_pre(t,:) = eeg_ch(t,:) - m;
 end
 
 %% Save data
-save('1_eeg_pre.mat', 'eeg_pre');
+save('1_eeg_pre_2.mat', 'eeg_pre');
 
 %% EEG Plot
 L = length(eeg_pre);
@@ -213,20 +214,29 @@ end
 
 target_epoch = permute(eeg_tar, [3 2 1]);
 standard_epoch = permute(eeg_sta, [3 2 1]);
-save('1_target.mat', 'target_epoch');
-save('1_standard.mat', 'standard_epoch');
+save('1_target_2.mat', 'target_epoch');
+save('1_standard_2.mat', 'standard_epoch');
 
-eeglab
+% To reject bad trial
+%eeglab
 
 %% import  rejected trial
 
 eeg_rej_s = EEG.data;
 eeg_rej_t = EEG.data;
 
+
 %% ERP
 
 erp_t = squeeze(mean(eeg_rej_t,3))';
 erp_s = squeeze(mean(eeg_rej_s,3))';
+
+%% save
+
+save('1_eeg_rej_s_2', 'eeg_rej_s');
+save('1_eeg_rej_t_2', 'eeg_rej_t');
+save('1_erp_s_2', 'erp_s');
+save('1_erp_t_2', 'erp_t');
 
 %% ERP_target plot
 
@@ -263,6 +273,8 @@ for i = 1:ch
 end
 
 %% together
+epoch_L = length(erp_t);
+epoch_T = linspace(-(sr*0.1)/sr,(sr*0.7)/sr,epoch_L);
 
 figure
 for i = 1:ch
@@ -278,63 +290,31 @@ for i = 1:ch
 end
 
 
-%% Data per trial plot - Target
-% Set
-epoch_L = length(erp_t);
-epoch_T = linspace(-(sr*0.1)/sr,(sr*0.7)/sr,epoch_L); % 0.8 s
-
-figure(1)
-clf
-for i = 1:round(size(eeg_tar,1)/2)
-    
-    t_tr = squeeze(eeg_tar(i,:,:));    % trial by time by channel
-  
-    subplot(5,10,i)
-    plot(epoch_T,t_tr); hold on
-    %ylim([-4 4]);
-    titles = sprintf("%d",i);
-    title(titles)
-
-end
-
-figure(2)
-clf
-for i = round(size(eeg_tar,1)/2)+1:size(eeg_tar,1)
-    
-    
-    t_tr = squeeze(eeg_tar(i,:,:));
-
-    subplot(5,10,i-round(size(eeg_tar,1)/2))
-    plot(epoch_T,t_tr); hold on
-    %ylim([-4 4]);
-    titles = sprintf("%d",i);
-    title(titles)
-end
-
 %% All block
 
-epoch_1 = load('1_target_rej.mat');  % channel * time(100) * trial
-epoch_2 = load('2_target_rej.mat');
+epoch_t_1 = load('1_eeg_rej_t_2.mat');  % channel * time(100) * trial
+epoch_t_2 = load('2_eeg_rej_t_2.mat');
 %epoch_3 = load('3_target.mat');
-epoch_s_1 = load('1_standard_rej.mat');  % channel * time(100) * trial
-epoch_s_2 = load('2_standard_rej.mat');
+epoch_s_1 = load('1_eeg_rej_s_2.mat');  % channel * time(100) * trial
+epoch_s_2 = load('2_eeg_rej_s_2.mat');
 %epoch_s_3 = load('3_standard.mat');
 
 
-epoch_all = cat(3, epoch_1.eeg_rej_e_tar,epoch_2.eeg_rej_e_tar);
-epoch_s_all =cat(3, epoch_s_1.eeg_rej_e_sta,epoch_s_2.eeg_rej_e_sta);
+epoch_t_all = cat(3, epoch_t_1.eeg_rej_t,epoch_t_2.eeg_rej_t);
+epoch_s_all =cat(3, epoch_s_1.eeg_rej_s,epoch_s_2.eeg_rej_s);
 
-erp_all = squeeze(mean(epoch_all,3))';
+erp_t_all = squeeze(mean(epoch_t_all,3))';
 erp_s_all = squeeze(mean(epoch_s_all,3))';
 
-epoch_L = length(erp_all);
+%%
+epoch_L = length(erp_t_all);
 epoch_T = linspace(-(sr*0.1)/sr,(sr*0.7)/sr,epoch_L);
 
 % target
 figure
 for i = 1:ch
     subplot(4,4,i)
-    plot(epoch_T,erp_all(:,i))
+    plot(epoch_T,erp_t_all(:,i))
     titles = sprintf("%s",ch_name(i));
     title(titles)
     xlim([-0.1 0.7]);
@@ -353,18 +333,38 @@ for i = 1:ch
 end
 
 
-%%
+%% all save
 
-save('all_target.mat', 'epoch_all');
+save('all_eeg_s_2.mat', 'epoch_s_all');
+save('all_eeg_t_2.mat', 'epoch_t_all');
+save('all_erp_t_2.mat', 'erp_t_all');
+save('all_erp_s_2.mat', 'erp_s_all');
+
+%% all together
+epoch_L = length(erp_t_all);
+epoch_T = linspace(-(sr*0.1)/sr,(sr*0.7)/sr,epoch_L);
+
+figure
+for i = 1:ch
+    subplot(4,4,i)
+    plot(epoch_T,erp_s_all(:,i),'k'); hold on 
+    plot(epoch_T,erp_t_all(:,i), '-r');
+    %plot(epoch_T, mmn(:,i), 'k');
+    titles = sprintf("%s",ch_name(i));
+    title(titles)
+    xlim([-0.1 0.7]);
+    ylim([-3 3]);
+    grid on
+end
 
 %% mmn
-for i = 1: size(erp_t,2)
-    for j= 1:size(erp_t,1)
+for i = 1: size(erp_t_all,2)
+    for j= 1:size(erp_t_all,1)
         
-        a = abs(erp_t(j,i));
-        b = abs(erp_s(j,i));
+        a = abs(erp_t_all(j,i));
+        b = abs(erp_s_all(j,i));
         c(j,i) = a-b;
-        if erp_t(j,i) < 0
+        if erp_t_all(j,i) < 0
             mmn(j,i) = -c(j,i);
         else
             mmn(j,i) = c(j,i);
@@ -416,4 +416,35 @@ save('all_tar.mat', 'erp_all');
 save('all_sta.mat', 'erp_s_all');
 
 
+%% Data per trial plot - Target
+% Set
+epoch_L = length(erp_t);
+epoch_T = linspace(-(sr*0.1)/sr,(sr*0.7)/sr,epoch_L); % 0.8 s
 
+figure(1)
+clf
+for i = 1:round(size(eeg_tar,1)/2)
+    
+    t_tr = squeeze(eeg_tar(i,:,:));    % trial by time by channel
+  
+    subplot(5,10,i)
+    plot(epoch_T,t_tr); hold on
+    %ylim([-4 4]);
+    titles = sprintf("%d",i);
+    title(titles)
+
+end
+
+figure(2)
+clf
+for i = round(size(eeg_tar,1)/2)+1:size(eeg_tar,1)
+    
+    
+    t_tr = squeeze(eeg_tar(i,:,:));
+
+    subplot(5,10,i-round(size(eeg_tar,1)/2))
+    plot(epoch_T,t_tr); hold on
+    %ylim([-4 4]);
+    titles = sprintf("%d",i);
+    title(titles)
+end

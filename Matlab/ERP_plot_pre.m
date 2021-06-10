@@ -1,19 +1,17 @@
-
-clear all
 close all
 clc
 
 sr = 125;
 
 % Load raw data & trigger
-eeg_data = load('EEG_0609.mat'); % EEG trace
-trg_data = load('A_0609.mat'); % trigger trace
+eeg_data = load('EEG_0526.mat'); % EEG trace
+trg_data = load('A_0526.mat'); % trigger trace
 
 % Select block data
 block = 1;   % block
 
 % Import
-raw = squeeze(eeg_data.EEG(block,:,:));   % times by channel
+raw = -squeeze(eeg_data.EEG(block,:,:));   % times by channel
 trg = squeeze(trg_data.AUX(block,:,:));
 
 % Select sta & tar
@@ -72,7 +70,7 @@ end
 
 % Common Average Reference
 for t = 1:ti
-    m = mean(eeg_ch(t,:));
+    m = mean(eeg_ch(t,[5 9]));
     eeg_pre(t,:) = eeg_ch(t,:) - m;
 end
 
@@ -97,32 +95,40 @@ t = linspace(0,L/sr,L); % time trace
 
 % if index > 3.14 = 1, then index < 3.14 = 0
 f_detect_trg = (detect_trg > 0);
-f_standard_trg = (standard_trg > 0);
-f_target_trg = (target_trg > 0);
 
 % Detect trigger onset
 % x[i]-x[i-1] ''''
-d_f_target_trg = diff(f_target_trg);    % 37499 by 1
-d_f_standard_trg = diff(f_standard_trg);
 d_f_detect_trg = diff(f_detect_trg);
 
 % Remove offset
-d_f_target_trg = (d_f_target_trg == 1);
-d_f_standard_trg = (d_f_standard_trg == 1); 
+
 d_f_detect_trg = (d_f_detect_trg == 1);
+d_f_detect_trg = [0; d_f_detect_trg];
 
-% Plus first trial
-d_f_target_trg = [d_f_target_trg; 0];
-d_f_standard_trg = [d_f_standard_trg; 0];
-
-% Find target
-target_trg_inx = find(d_f_target_trg == 1);   % Index of Target sound
-standard_trg_inx = find(d_f_standard_trg == 1); 
+%
 detect_trg_inx = find(d_f_detect_trg == 1); 
+target_trg_inx = [];
+standard_trg_inx =[];
+
+for i = 1:size(detect_trg_inx,1);
+    
+    pos = detect_trg_inx(i,:);
+    
+    if target_trg(pos) ~= 0
+        target_trg_inx = [target_trg_inx; pos];
+    end
+    if standard_trg(pos) ~= 0
+        standard_trg_inx = [standard_trg_inx; pos];
+    end
+end
+    
+    
+% Find target
 n_target = length(target_trg_inx);
 n_standard = length(standard_trg_inx);
 n_detect = length(detect_trg_inx);
 
+%%
 % Check trigger
 figure(1)
 clf
@@ -349,22 +355,14 @@ save('all_target.mat', 'epoch_all');
 %%
 
 figure
-for i = 1:ch
+for i = 1:ch-1
     subplot(4,4,i)
-    plot(epoch_T,erp_all(:,i)); hold on 
-    plot(epoch_T,erp_s_all(:,i), '-r');
+    plot(epoch_T,erp_t(:,i),'r'); hold on 
+    plot(epoch_T,erp_s(:,i), '-k');
     titles = sprintf("%s",ch_name(i));
     title(titles)
     xlim([-0.1 0.7]);
     ylim([-2.5 2.5]);
     grid on
 end
-
-
-
-
-
-
-
-
 

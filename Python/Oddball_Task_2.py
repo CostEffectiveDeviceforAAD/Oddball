@@ -137,9 +137,9 @@ if key == ["escape"]:
 
 
 ##### Explain the experiment #####
-
-#------------------ 실험 개요 ------------------#
 '''
+#------------------ 실험 개요 ------------------#
+
 a = "본 실험에선\n\n " 
     "두가지의 소리를 듣고 한 소리의 개수를 세는 \n\n " \
     "과제를 수행하게 될 것입니다. "
@@ -149,7 +149,7 @@ window_1(a,None, c, 35, None, 23)
 key = event.waitKeys(keyList = ["space","escape"], clearEvents = True)
 if key == ["escape"]:
     core.quit()
-'''
+
 #------------------ 자극 설명 ------------------#
 
 a = "본 실험에선\n\n "\
@@ -163,7 +163,7 @@ if key == ["escape"]:
     core.quit()
 
 #---------------- 자극 비율 설명 ----------------#
-'''
+
 a = "그 중  '목표 소리'  가 더 적은 비율로 나올 것입니다. \n\n" \
     "당신은  '목표 소리'  가 몇번 나왔는지 세어주세요.\n\n\n"\
     "그럼, 사용되는 두 소리를 들려드리겠습니다."
@@ -173,9 +173,9 @@ window_1(a, None, c, 35, None, 23)
 key = event.waitKeys(keyList = ["space","escape"], clearEvents = True)
 if key == ["escape"]:
     core.quit()
-'''
+
 #----------------- Volume 조절 -----------------#
-a = "먼저, 간단히 소리를 들려드릴태니 \n\n"
+a = "먼저, 간단히 소리를 들려드릴태니 \n\n"\
     "듣기 적당한 크기로 음량을 조절해 주세요.\n\n"
 c = "‘b’ 를 누르면 다시 한번 재생됩니다.\n\n"\
     "‘스페이스 바’ 를 누르면 다음 페이지로 넘어갑니다."
@@ -268,7 +268,7 @@ if key == ["escape"]:
 
 
 #----------------------- 연습 -----------------------#
-'''
+
 a = "그럼, 연습을 해보겠습니다.\n\n\n\n"
 b = "'목표 소리' 가 몇번 나왔는지 세어주세요.\n\n"
 window_1(a, b, None, 35, 30, None)
@@ -320,10 +320,10 @@ if key != ['2']:  # 정답수 = 2
     window_1(a, None, c, 38, None, 30)
     key = event.waitKeys(keyList=['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'], clearEvents=True)
     time.sleep(1)
-'''
+
 #------------------ 실험 구성 설명 ------------------#
 
-a = "실험 한번 진행 될 것이며,\n\n" \
+a = "실험은 한번 진행 될 것이며,\n\n" \
     "소요시간은 대략 20분입니다."
 c = "‘스페이스 바’ 를 누르면 다음 페이지로 넘어갑니다."
 window_1(a,None, c, 35, None, 23)
@@ -342,7 +342,7 @@ window_1(a, None, c, 50, None, 25)
 key = event.waitKeys(keyList = ["space","escape"], clearEvents = True)
 if key == ["escape"]:
     core.quit()
-
+'''
 
 #--------------------------------------------------------------------#
 #---------------------------- START TASK ----------------------------#
@@ -388,11 +388,6 @@ while True:
         [sample_eeg, ts_eeg] = inlet_eeg.pull_sample()
         [sample_aux, ts_aux] = inlet_aux.pull_sample()
 
-        # EXIT
-        key = event.getKeys()
-        if key == ["escape"]:
-            core.quit()
-
         # Check whether the sample has been entered or not
         # Stack data only when sample is entered, because there are cases where sample_eeg is not entered.
         if sample_eeg:
@@ -400,7 +395,7 @@ while True:
             # Stack data in list
             eeg.append(sample_eeg)
             aux.append(sample_aux)
-            print("{}".format(sample_aux))  # for checking
+            #print("{}".format(sample_aux))  # for checking
 
             # Record Data to a Text file in real-time
             sample_e = "".join([str(sample_eeg)])
@@ -412,10 +407,15 @@ while True:
                 f.write("  {0}".format(sample_a))
                 f.write(sttime + "\n")
 
+        # EXIT
+        key = event.getKeys()
+        if key == ["escape"]:
+            core.quit()
+
 
         # Set the Experiment time corresponcing to the sample length.
         # End current block
-        if len(eeg) == ((125*1.1)*(trial)+(125*5)):  # Extra 5 seconds (250sample)
+        if len(eeg) == ((125*1.1)*(trial)+(125*8)):  # Extra 8 seconds (1000sample)
 
             # Stack the total data of the current block.
             EEG_Record.append(eeg)
