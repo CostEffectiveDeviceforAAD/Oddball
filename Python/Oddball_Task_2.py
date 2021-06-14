@@ -25,7 +25,7 @@ import msvcrt as m
 
 #----------------------------- Connect to port of arduino ------------------------------#
 
-port = serial.Serial("COM4", 9600)   ## ksit laptop : com8 / my laptop : com10
+port = serial.Serial("COM9", 9600)   ## ksit laptop : com8 / my laptop : com10
 
 #-------------------------------- Open LSL network -------------------------------------#
 
@@ -51,7 +51,8 @@ eeg = []
 aux = []
 EEG_Record = []
 AUX_Record = []
-path = 'C:/Users/user/Desktop/hy-kist/OpenBCI/0609_data/'
+path = 'C:/Users/LeeJiWon/Desktop/OpenBCI/Oddball Task/save_data/'
+
 
 # kist path : 'C:/Users/LeeJiWon/Desktop/Oddball Task/save_data/'
 # hy path : 'C:/Users/user/Desktop/hy-kist/OpenBCI/save_data/'
@@ -137,10 +138,10 @@ if key == ["escape"]:
 
 
 ##### Explain the experiment #####
-'''
+
 #------------------ 실험 개요 ------------------#
 
-a = "본 실험에선\n\n " 
+a = "본 실험에선\n\n " \
     "두가지의 소리를 듣고 한 소리의 개수를 세는 \n\n " \
     "과제를 수행하게 될 것입니다. "
 c = "‘스페이스 바’ 를 누르면 다음 페이지로 넘어갑니다."
@@ -152,10 +153,8 @@ if key == ["escape"]:
 
 #------------------ 자극 설명 ------------------#
 
-a = "본 실험에선\n\n "\
-    "'기본 소리'  와  '목표 소리' \n\n 두가지의 소리를 듣게 될 것이며,\n\n" \
+a = "'기본 소리'  와  '목표 소리' \n\n 두가지의 소리를 듣게 될 것이며,\n\n" \
     "이 두 소리는 서로 다른 비율로 제시될 것입니다."
-c = "‘스페이스 바’ 를 누르면 다음 페이지로 넘어갑니다."
 
 window_1(a, None, c, 35, None, 23)
 key = event.waitKeys(keyList = ["space","escape"], clearEvents = True)
@@ -174,30 +173,10 @@ key = event.waitKeys(keyList = ["space","escape"], clearEvents = True)
 if key == ["escape"]:
     core.quit()
 
-#----------------- Volume 조절 -----------------#
-a = "먼저, 간단히 소리를 들려드릴태니 \n\n"\
-    "듣기 적당한 크기로 음량을 조절해 주세요.\n\n"
-c = "‘b’ 를 누르면 다시 한번 재생됩니다.\n\n"\
-    "‘스페이스 바’ 를 누르면 다음 페이지로 넘어갑니다."
-window_1(a,None, c, 35, None, 23)
-
-time.sleep(2)
-port.write(b'4')
-key = event.waitKeys(keyList = ["space",'b', "escape"], clearEvents = True)
-
-if key == ["escape"]:
-    core.quit()
-
-if key == ["b"]:
-    port.write(b'4')
-
-    key = event.waitKeys(keyList=["space", 'b', "escape"], clearEvents=True)
-
 
 #--------------- Standard 사운드 ---------------#
 
-a = "그럼, 사용되는 두 소리를 들려드리겠습니다.\n\n"\
-    "이 소리를 기억하세요.\n\n"
+a = "이 소리를 기억하세요.\n\n\n\n"
 window_1(a,None, None, 35, None, None)
 
 time.sleep(1)
@@ -273,7 +252,7 @@ a = "그럼, 연습을 해보겠습니다.\n\n\n\n"
 b = "'목표 소리' 가 몇번 나왔는지 세어주세요.\n\n"
 window_1(a, b, None, 35, 30, None)
 time.sleep(1)
-for i in (5,4,3,2,1):
+for i in (3,2,1):
     c = str(i)+"초 뒤 시작됩니다."
     window_1(a, b, c, 35, 30, 30)
     time.sleep(1)
@@ -282,7 +261,7 @@ a = " + "
 window_2(a,None, 100, None)
 
 port.write(b'4')    # Play practice sound ( 10 trial )
-time.sleep(9)       # length of the practice sound
+time.sleep(11)       # length of the practice sound
 
 
 #------------------- 정답 타이핑 -------------------#
@@ -323,8 +302,10 @@ if key != ['2']:  # 정답수 = 2
 
 #------------------ 실험 구성 설명 ------------------#
 
-a = "실험은 한번 진행 될 것이며,\n\n" \
-    "소요시간은 대략 20분입니다."
+a = "잘하셨습니다! \n\n\n " \
+    "과제는 한번 진행되며, \n\n" \
+    "소요시간은 대략 20분 입니다.\n"
+
 c = "‘스페이스 바’ 를 누르면 다음 페이지로 넘어갑니다."
 window_1(a,None, c, 35, None, 23)
 
@@ -342,14 +323,15 @@ window_1(a, None, c, 50, None, 25)
 key = event.waitKeys(keyList = ["space","escape"], clearEvents = True)
 if key == ["escape"]:
     core.quit()
-'''
+
 
 #--------------------------------------------------------------------#
 #---------------------------- START TASK ----------------------------#
 #--------------------------------------------------------------------#
 
+
 # Set parameter
-blcok = 1
+block = 1
 trial = 1000
 
 # Import Current Date & Time
@@ -359,11 +341,12 @@ date = data.getDateStr()
 with open(date + '.txt', 'w') as f:
     sttime = datetime.now().strftime('%H:%M:%S - ')
     f.write("START "+ sttime + "\n")
+    f.write("block = "+str(block)+"\n\n")
 
 #============================== Streaming ============================#
 
 # Run during 3 blocks
-while True:
+while block < 2:
 
     # Open lsl inlet
     inlet_eeg = StreamInlet(streams_eeg[0])  # eeg
@@ -388,6 +371,11 @@ while True:
         [sample_eeg, ts_eeg] = inlet_eeg.pull_sample()
         [sample_aux, ts_aux] = inlet_aux.pull_sample()
 
+        # EXIT
+        key = event.getKeys()
+        if key == ["escape"]:
+            core.quit()
+
         # Check whether the sample has been entered or not
         # Stack data only when sample is entered, because there are cases where sample_eeg is not entered.
         if sample_eeg:
@@ -395,7 +383,7 @@ while True:
             # Stack data in list
             eeg.append(sample_eeg)
             aux.append(sample_aux)
-            #print("{}".format(sample_aux))  # for checking
+            print("{}".format(sample_aux))  # for checking
 
             # Record Data to a Text file in real-time
             sample_e = "".join([str(sample_eeg)])
@@ -407,26 +395,23 @@ while True:
                 f.write("  {0}".format(sample_a))
                 f.write(sttime + "\n")
 
-        # EXIT
-        key = event.getKeys()
-        if key == ["escape"]:
-            core.quit()
-
 
         # Set the Experiment time corresponcing to the sample length.
         # End current block
-        if len(eeg) == ((125*1.1)*(trial)+(125*8)):  # Extra 8 seconds (1000sample)
+        if len(eeg) == ((125*1.1)*(trial)+(125*5)):  # Extra 5 seconds (250sample)
 
             # Stack the total data of the current block.
             EEG_Record.append(eeg)
             AUX_Record.append(aux)
 
-            np.save(path + 'EEG', EEG_Record)
-            np.save(path + 'A' , AUX_Record)
+            # Save data over each block.
+            EEG = np.asarray(EEG_Record)
+            AUX = np.asarray(AUX_Record)
+            np.save(path + 'EEG', EEG)
+            np.save(path + 'A', AUX)
 
-            '''
             # Question
-            a = str(block) + " Block 이 끝났습니다."
+            a = "실험이 끝났습니다."
             c = "'목표 소리'가 몇번 나왔는지 키보드에 입력하여주세요."
             window_1(a, None, c, 50, None, 35)
 
@@ -435,7 +420,7 @@ while True:
 
             if key == ["escape"] or key2 == ["escape"]:
                 core.quit()
-            
+
             # Write a response to the Text file
             key = "".join([str(key[0])])
             key2 = "".join([str(key2[0])])
@@ -444,23 +429,23 @@ while True:
                 sttime = datetime.now().strftime('%Y%m%d_%H:%M:%S - ')
                 f.write("Answer = {0} / ".format(key+key2))
                 f.write(sttime + "\n\n")
-                f.write("block = " + str(block+1) + "\n\n")
-            '''
+                #f.write("block = " + str(block+1) + "\n\n")
 
             a = "THE END"
             b = "수고하셨습니다!"
             window_2(a,b, 100, 40)
             time.sleep(3)
 
+            # Next block
+            block = block + 1
+
             # Exit second while
             break
-    break
 
 # Close port & window
 port.close()
 screen.close()
 
-
 ## Save mat file
-scipy.io.savemat(path+'EEG_0609.mat', {'EEG':EEG_Record})
-scipy.io.savemat(path+'A_0609.mat', {'AUX':AUX_Record})
+scipy.io.savemat(path+'EEG_0609.mat', {'EEG':EEG})
+scipy.io.savemat(path+'A_0609.mat', {'AUX':AUX})
