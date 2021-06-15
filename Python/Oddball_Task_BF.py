@@ -4,7 +4,7 @@
 """"""""""""""""""""""""""""""""""""""""""
 
 ###### Imports #####
-import librosa, warnings, random, time, sys, serial, pickle
+import librosa, warnings, random, time, sys, serial, pickle, scipy.io, brainflow, logging, mne, argparse
 from datetime import datetime
 import numpy as np
 import matplotlib.pyplot as plt
@@ -13,32 +13,69 @@ from pylsl import StreamInlet, resolve_stream, StreamInfo
 #from OpenBCI_lsl import *
 from scipy import signal
 from scipy.signal import butter, lfilter, resample, filtfilt
-import scipy.io
 #from helper import *
 #from pymtrf import *
 from psychopy import visual, core, event, data
 from psychopy.tools.filetools import fromFile, toFile
 #from preprocessing_ha import *
 import msvcrt as m
+from brainflow.board_shim import BoardShim, BrainFlowInputParams, BoardIds, BrainFlowError
+from brainflow.data_filter import DataFilter, FilterTypes, AggOperations, WindowFunctions, DetrendOperations
+from mne.channels import read_layout
 
 
 
 #----------------------------- Connect to port of arduino ------------------------------#
 
-port = serial.Serial("COM9", 9600)   ## ksit laptop : com8 / my laptop : com10
+port = serial.Serial("COM8", 9600)   ## ksit laptop : com8 / my laptop : com10
 
-#-------------------------------- Open LSL network -------------------------------------#
-
-# first resolve an EEG stream on the lab network
-print("looking for an EEG stream...")
-streams_eeg = resolve_stream('type', 'EEG')
-streams_aux = resolve_stream('type', 'AUX')
+#-------------------------------- Open BrainFlow Board network -------------------------------------#
 
 
-# create a new inlet to read from the stream
-print("StreamInlet")
-inlet_eeg = StreamInlet(streams_eeg[0])    # channel
-inlet_aux = StreamInlet(streams_aux[0])    # aux
+BoardShim.enable_dev_board_logger()
+
+parser = argparse.ArgumentParser()
+# use docs to check which parameters are required for specific board, e.g. for Cyton - set serial port
+parser.add_argument('--timeout', type=int, help='timeout for device discovery or connection', required=False,
+                    default=0)
+parser.add_argument('--ip-port', type=int, help='ip port', required=False, default=0)
+parser.add_argument('--ip-protocol', type=int, help='ip protocol, check IpProtocolType enum', required=False,
+                    default=0)
+parser.add_argument('--ip-address', type=str, help='ip address', required=False, default='')
+parser.add_argument('--serial-port', type=str, help='serial port', required=False, default='COM7')
+parser.add_argument('--mac-address', type=str, help='mac address', required=False, default='')
+parser.add_argument('--other-info', type=str, help='other info', required=False, default='')
+parser.add_argument('--streamer-params', type=str, help='streamer params', required=False, default='')
+parser.add_argument('--serial-number', type=str, help='serial number', required=False, default='')
+parser.add_argument('--board-id', type=int, help='board id, check docs to get a list of supported boards',
+                    required=False, default='2')
+parser.add_argument('--file', type=str, help='file', required=False, default='')
+args = parser.parse_args()
+
+params = BrainFlowInputParams()
+BoardShim.enable_dev_board_logger()
+params.ip_port = args.ip_port
+params.serial_port = args.serial_port
+params.mac_address = args.mac_address
+params.other_info = args.other_info
+params.serial_number = args.serial_number
+params.ip_address = args.ip_address
+params.ip_protocol = args.ip_protocol
+params.timeout = args.timeout
+params.file = args.file
+
+board = BoardShim(args.board_id, params)
+board.prepare_session()
+
+# board.start_stream () # use this for default options
+board.start_stream(45000, args.streamer_params)
+time.sleep(10)
+#data = board.get_current_board_data (125) # get latest 256 packages or less, doesnt remove them from internal buffer
+Board_data = board.get_board_data()  # get all data and remove it from internal buffer
+
+# Channel index
+eeg_channels = board.get_eeg_channels(args.board_id)
+aux_channels = board.get_analog_channels(args.board_id)
 
 
 #-------------------------------- Parameter Setting -----------------------------------#
@@ -47,8 +84,8 @@ inlet_aux = StreamInlet(streams_aux[0])    # aux
 tr = 0
 a = 0
 b = 0
-eeg = []
-aux = []
+eeg = np.zeros((16,1))
+aux = np.zeros((3,1))
 EEG_Record = []
 AUX_Record = []
 path = 'C:/Users/LeeJiWon/Desktop/OpenBCI/Oddball Task/save_data/'
@@ -138,7 +175,7 @@ if key == ["escape"]:
 
 
 ##### Explain the experiment #####
-
+'''
 #------------------ 실험 개요 ------------------#
 
 a = "본 실험에선\n\n " \
@@ -301,7 +338,7 @@ if key != ['2']:  # 정답수 = 2
     time.sleep(1)
 
 #------------------ 실험 구성 설명 ------------------#
-
+'''
 a = "잘하셨습니다! \n\n\n " \
     "과제는 한번 진행되며, \n\n" \
     "소요시간은 대략 20분 입니다.\n"
@@ -332,13 +369,13 @@ if key == ["escape"]:
 
 # Set parameter
 block = 1
-trial = 1000
+trial = 50
 
 # Import Current Date & Time
-date = data.getDateStr()
+date_time = data.getDateStr()
 
 # Open Text file to record
-with open(date + '.txt', 'w') as f:
+with open(date_time + '.txt', 'w') as f:
     sttime = datetime.now().strftime('%H:%M:%S - ')
     f.write("START "+ sttime + "\n")
     f.write("block = "+str(block)+"\n\n")
@@ -347,10 +384,6 @@ with open(date + '.txt', 'w') as f:
 
 # Run during 3 blocks
 while block < 2:
-
-    # Open lsl inlet
-    inlet_eeg = StreamInlet(streams_eeg[0])  # eeg
-    inlet_aux = StreamInlet(streams_aux[0])  # aux
 
     # Start task
     a = "START"
@@ -363,13 +396,18 @@ while block < 2:
     a = "+"
     window_2(a,None, 100, None)
     port.write(b'1')      # Sends the Serial value to Arduino to play sound array during a block
-
+    Board_data = board.get_board_data()
     # EEG Data & AUX Data Recording
     while True:
 
-        # Receive EEG data & AUX Data
-        [sample_eeg, ts_eeg] = inlet_eeg.pull_sample()
-        [sample_aux, ts_aux] = inlet_aux.pull_sample()
+        # Receive All Data
+
+        # data = board.get_current_board_data(125)
+        Board_data = board.get_board_data()
+
+        # Seperate data
+        eeg_data = Board_data[eeg_channels, :]
+        aux_data = Board_data[aux_channels, :]
 
         # EXIT
         key = event.getKeys()
@@ -378,18 +416,18 @@ while block < 2:
 
         # Check whether the sample has been entered or not
         # Stack data only when sample is entered, because there are cases where sample_eeg is not entered.
-        if sample_eeg:
+        if eeg_data.size > 0 :
 
             # Stack data in list
-            eeg.append(sample_eeg)
-            aux.append(sample_aux)
-            print("{}".format(sample_aux))  # for checking
+            eeg = np.concatenate((eeg, eeg_data), axis=1)
+            aux = np.concatenate((aux, aux_data), axis=1)
+            print("{}".format(aux_data))  # for checking
 
             # Record Data to a Text file in real-time
-            sample_e = "".join([str(sample_eeg)])
-            sample_a = "".join([str(sample_aux)])
+            sample_e = "".join([str(eeg_data)])
+            sample_a = "".join([str(aux_data)])
 
-            with open(date + '.txt', 'a+') as f:
+            with open(date_time + '.txt', 'a+') as f:
                 sttime = datetime.now().strftime('%Y%m%d_%H:%M:%S - ')
                 f.write(str(len(eeg))+" : {0}  ".format(sample_e))
                 f.write("  {0}".format(sample_a))
@@ -398,7 +436,7 @@ while block < 2:
 
         # Set the Experiment time corresponcing to the sample length.
         # End current block
-        if len(eeg) == ((125*1.1)*(trial)+(125*5)):  # Extra 5 seconds (250sample)
+        if len(eeg.T) == ((125*1.1)*(trial)+(125*5)):  # Extra 5 seconds (250sample)
 
             # Stack the total data of the current block.
             EEG_Record.append(eeg)
@@ -425,7 +463,7 @@ while block < 2:
             key = "".join([str(key[0])])
             key2 = "".join([str(key2[0])])
 
-            with open(date + '.txt', 'a+') as f:
+            with open(date_time + '.txt', 'a+') as f:
                 sttime = datetime.now().strftime('%Y%m%d_%H:%M:%S - ')
                 f.write("Answer = {0} / ".format(key+key2))
                 f.write(sttime + "\n\n")
@@ -447,5 +485,5 @@ port.close()
 screen.close()
 
 ## Save mat file
-scipy.io.savemat(path+'EEG_0609.mat', {'EEG':EEG})
-scipy.io.savemat(path+'A_0609.mat', {'AUX':AUX})
+scipy.io.savemat(path+'EEG.mat', {'EEG':EEG})
+scipy.io.savemat(path+'A.mat', {'AUX':AUX})
