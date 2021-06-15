@@ -1,0 +1,52 @@
+21.06.15
+
+brainflow 
+
+** To do
+- brainflow for oddball task
+- text file save brainflow에 맞춰 재점검
+- AAD(on-line) 에 맞춘 brainflow로 재설정 - eeg,aux
+
+
+** Done
+[1] brainflow streaming 일단 trigger 잘 들어옴. 오차없이!  (get_board_data) 했을 경우.
+
+> 100ms 씩 3pin 번갈아가며 100번씩 보냄
+> 번갈아가며 끊김없이 잘 들어오고,
+100ms > 12~13(12.5)sample 씩, 100 씩 잘들어옴!
+[pin3_check.mat]
+
+[2] for AAD , receive eegdata
+- get_board_data 가 쌓인 data 긁어오는 거기에 chunksize 했던 것을 그냥 이것으로하면
+process 되는 동안 쌓인 data를 싹 긁어 올수있음.
+- 즉, data 받고 process + time.sleep = 1s 한 후 다시 data 받고 -- 반복하면,
+  끊김없이 잘 받아짐. 
+  >> 어캐 확인했냐면, 또 3pin에 100ms 번갈아 주는거 recording 해봤더니
+       끊김없이 12-13sample 씩 순서대로 잘 들어옴 이것을 보아 buffer 없이 streaming 이 되는 것을 확인할 수 있음.
+> 어 근데 이건 pylsl 도 가능한거아니였나? 아 chunk 할때는 달랐나. 
+
+
+
+** Disscussion
+허나. 나는 125*31 = 3875 sample 즉 31초만 돌리고싶은데
+덩어리로 들어오기때문에, 맞추지는 못함.
+offline은 상관없다만 online 시에는 개선 필요.
+
+> off-line은 길게 찍어도 recording 된 trigger랑 eeg랑 맞춰 보기만 하면됨.
+> on-line은 언제가 언젠지 확실히 detect 해야함. 
+   즉, aux는 1sample씩 catch해야하며, eeg는 125(I want)씩 잘 받아야함.
+지금처럼 예측불가한 sample 개수이면 안됨.
+
+
+** plan
+
+- off-line 은 ok야. 다시 쭉 확인해보고! 실제 패러다임에 맞춰 리코딩.
+- text save 도 다시 확인.
+
+- on-line도 다시 확인. >> aux 어떻게 실시간으로 detect 할지 고민..
+
+
+
+
+
+

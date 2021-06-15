@@ -27,7 +27,7 @@ from mne.channels import read_layout
 
 #----------------------------- Connect to port of arduino ------------------------------#
 
-port = serial.Serial("COM8", 9600)   ## ksit laptop : com8 / my laptop : com10
+port = serial.Serial("COM10", 9600)   ## ksit laptop : com8 / my laptop : com10
 
 #-------------------------------- Open BrainFlow Board network -------------------------------------#
 
@@ -42,7 +42,7 @@ parser.add_argument('--ip-port', type=int, help='ip port', required=False, defau
 parser.add_argument('--ip-protocol', type=int, help='ip protocol, check IpProtocolType enum', required=False,
                     default=0)
 parser.add_argument('--ip-address', type=str, help='ip address', required=False, default='')
-parser.add_argument('--serial-port', type=str, help='serial port', required=False, default='COM7')
+parser.add_argument('--serial-port', type=str, help='serial port', required=False, default='COM15')        #kist = com7 // hy = com15
 parser.add_argument('--mac-address', type=str, help='mac address', required=False, default='')
 parser.add_argument('--other-info', type=str, help='other info', required=False, default='')
 parser.add_argument('--streamer-params', type=str, help='streamer params', required=False, default='')
@@ -88,7 +88,7 @@ eeg = np.zeros((16,1))
 aux = np.zeros((3,1))
 EEG_Record = []
 AUX_Record = []
-path = 'C:/Users/LeeJiWon/Desktop/OpenBCI/Oddball Task/save_data/'
+path = 'C:/Users/user/Desktop/hy-kist/OpenBCI/save_data/'
 
 
 # kist path : 'C:/Users/LeeJiWon/Desktop/Oddball Task/save_data/'
@@ -369,7 +369,7 @@ if key == ["escape"]:
 
 # Set parameter
 block = 1
-trial = 50
+trial = 5
 
 # Import Current Date & Time
 date_time = data.getDateStr()
@@ -429,14 +429,14 @@ while block < 2:
 
             with open(date_time + '.txt', 'a+') as f:
                 sttime = datetime.now().strftime('%Y%m%d_%H:%M:%S - ')
-                f.write(str(len(eeg))+" : {0}  ".format(sample_e))
+                f.write(str(len(eeg.T))+" : {0}  ".format(sample_e))
                 f.write("  {0}".format(sample_a))
                 f.write(sttime + "\n")
 
 
         # Set the Experiment time corresponcing to the sample length.
         # End current block
-        if len(eeg.T) == ((125*1.1)*(trial)+(125*5)):  # Extra 5 seconds (250sample)
+        if len(eeg.T) > (125*31):        #((125*1.1)*(trial)+(125*5)):  # Extra 5 seconds (250sample)
 
             # Stack the total data of the current block.
             EEG_Record.append(eeg)
