@@ -27,7 +27,7 @@ from mne.channels import read_layout
 
 #----------------------------- Connect to port of arduino ------------------------------#
 
-port = serial.Serial("COM10", 9600)   ## ksit laptop : com8 / my laptop : com10
+port = serial.Serial("COM8", 9600)   ## ksit laptop : com8 / my laptop : com10
 
 #-------------------------------- Open BrainFlow Board network -------------------------------------#
 
@@ -42,7 +42,7 @@ parser.add_argument('--ip-port', type=int, help='ip port', required=False, defau
 parser.add_argument('--ip-protocol', type=int, help='ip protocol, check IpProtocolType enum', required=False,
                     default=0)
 parser.add_argument('--ip-address', type=str, help='ip address', required=False, default='')
-parser.add_argument('--serial-port', type=str, help='serial port', required=False, default='COM15')        #kist = com7 // hy = com15
+parser.add_argument('--serial-port', type=str, help='serial port', required=False, default='COM7')        #kist = com7 // hy = com15
 parser.add_argument('--mac-address', type=str, help='mac address', required=False, default='')
 parser.add_argument('--other-info', type=str, help='other info', required=False, default='')
 parser.add_argument('--streamer-params', type=str, help='streamer params', required=False, default='')
@@ -88,10 +88,10 @@ eeg = np.zeros((16,1))
 aux = np.zeros((3,1))
 EEG_Record = []
 AUX_Record = []
-path = 'C:/Users/user/Desktop/hy-kist/OpenBCI/save_data/'
+path = 'C:/Users/LeeJiWon/Desktop/OpenBCI/save_data/'
 
 
-# kist path : 'C:/Users/LeeJiWon/Desktop/Oddball Task/save_data/'
+# kist path : 'C:/Users/LeeJiWon/Desktop/OpenBCI/save_data/'
 # hy path : 'C:/Users/user/Desktop/hy-kist/OpenBCI/save_data/'
 
 
@@ -177,114 +177,79 @@ if key == ["escape"]:
 ##### Explain the experiment #####
 '''
 #------------------ 실험 개요 ------------------#
-
 a = "본 실험에선\n\n " \
     "두가지의 소리를 듣고 한 소리의 개수를 세는 \n\n " \
     "과제를 수행하게 될 것입니다. "
 c = "‘스페이스 바’ 를 누르면 다음 페이지로 넘어갑니다."
 window_1(a,None, c, 35, None, 23)
-
 key = event.waitKeys(keyList = ["space","escape"], clearEvents = True)
 if key == ["escape"]:
     core.quit()
-
 #------------------ 자극 설명 ------------------#
-
 a = "'기본 소리'  와  '목표 소리' \n\n 두가지의 소리를 듣게 될 것이며,\n\n" \
     "이 두 소리는 서로 다른 비율로 제시될 것입니다."
-
 window_1(a, None, c, 35, None, 23)
 key = event.waitKeys(keyList = ["space","escape"], clearEvents = True)
 if key == ["escape"]:
     core.quit()
-
 #---------------- 자극 비율 설명 ----------------#
-
 a = "그 중  '목표 소리'  가 더 적은 비율로 나올 것입니다. \n\n" \
     "당신은  '목표 소리'  가 몇번 나왔는지 세어주세요.\n\n\n"\
     "그럼, 사용되는 두 소리를 들려드리겠습니다."
-
 window_1(a, None, c, 35, None, 23)
-
 key = event.waitKeys(keyList = ["space","escape"], clearEvents = True)
 if key == ["escape"]:
     core.quit()
-
-
 #--------------- Standard 사운드 ---------------#
-
 a = "이 소리를 기억하세요.\n\n\n\n"
 window_1(a,None, None, 35, None, None)
-
 time.sleep(1)
 port.write(b'2')     # Sends the Serial value to Arduino to play the Standard sound
 b = "'기본 소리' 입니다.\n\n\n"
 c = "‘b’ 를 누르면 다시 한번 재생됩니다.\n\n"\
     "‘스페이스 바’ 를 누르면 다음 페이지로 넘어갑니다."
 window_1(a,b, c, 35, 35, 23)
-
 key = event.waitKeys(keyList = ["space",'b', "escape"], clearEvents = True)
 if key == ["escape"]:
     core.quit()
-
-
 #-------------- 다시 ( 'b' 누른 경우 ) --------------#
-
 if key == ['b']:
     while key == ['b']:
-
         port.write(b'2')
         time.sleep(2)
         key = event.waitKeys(keyList=["space", 'b',"escape"], clearEvents=True)
         if key == ["escape"]:
             core.quit()
-
-
 #----------------- Target 사운드 ------------------#
-
 a = "이 소리를 기억하세요.\n\n\n\n"
 window_1(a,None, None, 35, None, None)
-
 time.sleep(1)
 port.write(b'3')    # Sends the Serial value to Arduino to play the Target sound
 b = "'목표 소리' 입니다.\n\n\n"
 c = "‘b’ 를 누르면 다시 한번 재생됩니다.\n\n"\
     "‘스페이스 바’ 를 누르면 다음 페이지로 넘어갑니다."
 window_1(a,b, c, 35, 35, 23)
-
 key = event.waitKeys(keyList=["space", 'b',"escape"], clearEvents=True)
 if key == ["escape"]:
     core.quit()
-
-
 #-------------- 다시 ( 'b' 누른 경우 ) --------------#
-
 while key == ['b']:
-
     port.write(b'3')
     time.sleep(2)
     key = event.waitKeys(keyList=["space", 'b', "escape"], clearEvents=True)
     if key == ["escape"]:
         core.quit()
-
-
 #-------------------- 주의 사항 --------------------#
-
 a = "소리가 제시되는 동안은 \n\n" \
     "' + ' \n\n" \
     "위 기호에 시선을 집중하여 주시고,\n\n"\
     "몸과 눈의 움직임을 최소화하여 주세요."
-
 c = "‘스페이스 바’ 를 누르면 다음 페이지로 넘어갑니다."
 window_1(a, None, c, 35, None, 23)
-
 key = event.waitKeys(keyList = ["space","escape"], clearEvents = True)
 if key == ["escape"]:
     core.quit()
-
-
 #----------------------- 연습 -----------------------#
-
 a = "그럼, 연습을 해보겠습니다.\n\n\n\n"
 b = "'목표 소리' 가 몇번 나왔는지 세어주세요.\n\n"
 window_1(a, b, None, 35, 30, None)
@@ -293,50 +258,38 @@ for i in (3,2,1):
     c = str(i)+"초 뒤 시작됩니다."
     window_1(a, b, c, 35, 30, 30)
     time.sleep(1)
-
 a = " + "
 window_2(a,None, 100, None)
-
 port.write(b'4')    # Play practice sound ( 10 trial )
 time.sleep(11)       # length of the practice sound
-
-
 #------------------- 정답 타이핑 -------------------#
-
 a = "'목표 소리' 는 몇번 나왔나요?"
 c = "키보드에 입력해주세요."
 window_1(a, None, c, 38, None, 30)
-
 key = event.waitKeys(keyList=['0','1','2','3','4','5','6','7','8','9'], clearEvents=True)
 time.sleep(1)
-
 #------------------ 틀렸을 때 다시 ------------------#
-
 if key != ['2']:  # 정답수 = 2
     a = "다시 해보겠습니다.\n\n\n\n"
     b = "'목표 소리' 가 몇번 나왔는지 세어주세요.\n\n"
     window_1(a, b, None, 35, 30, None)
     time.sleep(1)
-
     for i in (5,4,3,2,1):
         b = str(i) + "초 뒤 시작됩니다."
         window_1(a, b, c, 35, 30, 30)
         time.sleep(1)
-
     # 자극
     a = " + "
     window_2(a, None, 100 ,None)
     time.sleep(3)
     port.write(b'4')   # Play practice sound ( 10 trial )
     time.sleep(9)      # length of the practice sound
-
     # 몇번?
     a = "'목표 소리' 는 몇번 나왔나요?\n\n"
     c = "해당 숫자의 키보드를 눌러주세요."
     window_1(a, None, c, 38, None, 30)
     key = event.waitKeys(keyList=['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'], clearEvents=True)
     time.sleep(1)
-
 #------------------ 실험 구성 설명 ------------------#
 '''
 a = "잘하셨습니다! \n\n\n " \

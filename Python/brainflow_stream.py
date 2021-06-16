@@ -14,14 +14,12 @@ import random
 import serial
 from brainflow.board_shim import BoardShim, BrainFlowInputParams, BoardIds, BrainFlowError
 from brainflow.data_filter import DataFilter, FilterTypes, AggOperations, WindowFunctions, DetrendOperations
-from datetime import datetime
-from psychopy import visual, core, event, data
 
 
 
 
 
-port = serial.Serial("COM10", 9600)
+port = serial.Serial("COM8", 9600)
 ###############################################################
 
 BoardShim.enable_dev_board_logger()
@@ -34,7 +32,7 @@ parser.add_argument('--ip-port', type=int, help='ip port', required=False, defau
 parser.add_argument('--ip-protocol', type=int, help='ip protocol, check IpProtocolType enum', required=False,
                     default=0)
 parser.add_argument('--ip-address', type=str, help='ip address', required=False, default='')
-parser.add_argument('--serial-port', type=str, help='serial port', required=False, default='COM15')
+parser.add_argument('--serial-port', type=str, help='serial port', required=False, default='COM7')
 parser.add_argument('--mac-address', type=str, help='mac address', required=False, default='')
 parser.add_argument('--other-info', type=str, help='other info', required=False, default='')
 parser.add_argument('--streamer-params', type=str, help='streamer params', required=False, default='')
@@ -77,46 +75,67 @@ aux_channels = board.get_analog_channels(args.board_id)
 ti=[]
 eeg = np.zeros((16,1))
 aux = np.zeros((3,1))
+eeg_data = np.array([])
+temp=[]
+w = 1
+num = 1
 
 print("start")
 port.write(b'1')
-# Import Current Date & Time
-date_time = data.getDateStr()
-block = 1
-# Open Text file to record
-with open(date_time + '.txt', 'w') as f:
-    sttime = datetime.now().strftime('%H:%M:%S - ')
-    f.write("START "+ sttime + "\n")
-    f.write("block = "+str(block)+"\n\n")
 
+while num < 2:  # + zeros
 
-Board_data = board.get_board_data()
-while len(eeg.T) < 125*5:  # + zeros
-
-    #time.sleep(1)
-    input = board.get_board_data()
+    ## new trial
 
     #input = board.get_board_data()
+    #input = board.get_board_data()
+    input = board.get_board_data()
+
     eeg_data = input[eeg_channels, :]
-    aux_data = input[aux_channels, :]   # 11,12,13 / 0 or 1
+    aux_data = input[aux_channels, :]
+    eeg = np.concatenate((eeg, eeg_data), axis=1)
+    aux = np.concatenate((aux, aux_data), axis=1)
+    print(aux_data)
 
-    if eeg_data.size > 0 :
+    # detect sound
+    if 1 in aux_data[1,:]:
+        print("speech")
+        print(aux_data)
+        num = num+1
 
-        eeg = np.concatenate((eeg, eeg_data), axis=1)
-        aux = np.concatenate((aux, aux_data), axis=1)
-        print(len(eeg.T))
-        #print(aux_data)
-        #time.sleep(1)
+        #여기서의 첫 0.5 의 index를 찾아야해
+        index = np.where(aux[1,:]==1)     # Onset 지점!
+        onset = index[0][0]
 
-        # Record Data to a Text file in real-time
-        sample_e = "".join([str(eeg_data.T)])
-        sample_a = "".join([str(aux_data)])
-        with open(date_time + '.txt', 'a+') as f:
-            sttime = datetime.now().strftime('%Y%m%d_%H:%M:%S - ')
-            f.write(str(len(eeg.T))+" : {0}  ".format(sample_e))
-            f.write("  {0}".format(sample_a))
-            f.write(sttime + "\n")
-        time.sleep(1)
+        # onset 부터 3*125 구간이 되면 자르기시작.
+
+        while len(eeg.T) < (onset + 125*3 + 125*10):       #한 trial while
+
+            # receive data
+            input = board.get_board_data()
+            eeg_data = input[eeg_channels, :]
+            aux_data = input[aux_channels, :]                 # 11,12,13 / 0 or 1
+            eeg_record = np.concatenate((eeg_record, eeg_data), axis=1)     # channel by time
+            aux_record = np.concatenate((aux_record, aux_data), axis=1)
+
+            print("data" + str(len(eeg.T)))
+
+            # beep 끝나고 난후 1초 후 부터 1초 넘을때마다 1초씩 자르기
+
+            if len(eeg.T) > (onset + 125*3 + 125*(w)):
+
+                # beep 후 data를 1초 단위 자르기.
+                win = aux[:, onset + 125*3 + 125*(w-1) : onset + 125*3 + 125*(w)]
+
+                print("1s")
+
+                temp.append(win)
+
+                ## 막 프로세싱
+                time.sleep(0.5)    # 임의로 걸리는 시간을 잡음.
+                w = w+1
+
+
 
 board.stop_stream()
 board.release_session()
