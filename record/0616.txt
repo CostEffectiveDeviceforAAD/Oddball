@@ -1,0 +1,50 @@
+210616
+
+** To do
+
+1. AAD, Oddball 둘다 stream 받는거 확인
+2. AAD real-time tirigger 받는거 구성
+3. MMN pre-processing 다시 plot 
+
+
+** done
+
+## Oddball -brain flow stream
+: 원하는 시간의 샘플수보다는 넘치게 들어옴. 
+ 허나 offline 일시에는 상관없음.
+ 트리거가 일정히 끊김없이 들어오는 것을 보아 streaming 에는 문제 없음.
+ eeg도 동일한 크기로 들어오며 확인결과 반복되어 들어온 것도 없음.
+
+
+## board.get_current_board_data(1)
+: 이건 못씀. trigger 로 치면 100ms 만 보냈는데 11pin 만 계속들어오고, 5초짜리 squency가 몇초안에 끝남. 
+
+
+## 계속 쌓으면서 쌓인거 segment 는 원하는대로 챡챡 자름
+: 어차피 1초 안에 끝나면서, 넘쳐도 상관없음. 
+쨋든 시간 즉, 15초는 16초에 처리되는건 잘되고있으니 (확인)
+online으로 잘되고 있는지 확인
+data 쌓인거로는 잘 쌓임 잘림없이
+> 어캐 확인할까..
+
+** Discussion
+
+pylsl 도 긁어오는 개념인가봐 왜냐면 aux로 트리거 인식하고 processing 될땐 aux pull 안하다가
+다시 인식할때 받으려니 전에 쌓이던게 들어와. 그래서 eegdata 받으면서 같이 aux도 받아야
+새로운 trial 인식할때 리셋돼있어.
+
+그리고, brinflow도 크기가 일정하지 않았지. 이어지긴하다만. 즉, 한번 받고 zeropad 해주면 그다음 받을때 전 segment data가 같이 된다는것
+125sample 은 정확했으니. 그거 제대로 꽉 받고 넘겨야해
+current(125)를 하면? 시작점을 잘 맞춰야해.
+trigger 로 맞는지 보자!
+
+그전에 aux 한 sample 씩 받아야 인식가능해.. 
+
+
+%%%%%
+%% 트리거받고 3초 beep sound 를 time.sleep 으로 기다리는것이 아닌.
+스트리밍 계속하고, trigger 들어온 기준으로 sample 단위로 끊으면 어떨지.
+trigger 들어오고, 3초 * 125 후 부터 125(1초)씩 잘라서 갖다쓰기.
+그래도 어차피 1초 지나고 난 후 쌓인 데이터로 1초안에 processing 하는거니깐
+>> 가능! 첨 onset index 잡고, bepp 3 초 동안도 데이터 쌓고 그거 감안해서 쌓이는 데이터 segment
+    그렇게 trigger segment 해서 봤더니 끊김없이 13sample 씩 잘들어옴!!
